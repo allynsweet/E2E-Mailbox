@@ -29,7 +29,7 @@ export interface SetEmailResponse {
     s_time_expires: string;
 }
 
-export default class IntegrationMailer {
+export default class IntegrationMailbox {
     private API_URL = 'http://api.guerrillamail.com/ajax.php'
 
     private sidToken = '';

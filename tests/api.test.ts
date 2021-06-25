@@ -1,6 +1,6 @@
-import IntegrationMailer, { EmailResponse } from '../src/index';
+import IntegrationMailbox, { EmailResponse } from '../src/index';
 
-const mailer = new IntegrationMailer();
+const mailer = new IntegrationMailbox();
 let emailList: Array<EmailResponse> = [];
 let emailAddress: string | undefined = '';
 test('should generate an email properly', async () => {

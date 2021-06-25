@@ -2,7 +2,8 @@
   "name": "e2e-mailbox",
   "version": "1.0.1",
   "description": "E2E test your email notification system using GuerrillaMail API.",
-  "main": "src/index.js",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "author": "Allyn Sweet",
   "license": "MIT",
   "scripts": {

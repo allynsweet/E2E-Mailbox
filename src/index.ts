@@ -8,7 +8,7 @@ export interface CreateEmailResponse {
 }
 
 export interface EmailListResponse {
-    list: Array<EmailResponse>
+    list: EmailResponse[];
 }
 
 export interface EmailResponse {
@@ -49,6 +49,7 @@ export default class IntegrationMailbox {
             const response = await axios.get(this.API_URL, { params });
             return response;
         } catch (error) {
+            // tslint:disable-next-line:no-console
             console.error(error);
         }
     }
@@ -75,8 +76,8 @@ export default class IntegrationMailbox {
      * Get the current list of emails from the email inbox.
      * @returns Array of emails
      */
-    async fetchEmailList(): Promise<Array<EmailResponse>> {
-        let emailList: Array<EmailResponse> = [];
+    async fetchEmailList(): Promise<EmailResponse[]> {
+        let emailList: EmailResponse[] = [];
         const payload = { f: 'get_email_list', offset: 0 };
         const response = await this.sendRequest(payload);
         if (!response) { return emailList; }
@@ -105,13 +106,13 @@ export default class IntegrationMailbox {
     }
 
     /**
-    * Forget the current email address. This will not stop the session, the existing session will be maintained.
-    * A subsequent call to get_email_address will fetch a new email address or the client can call set_email_user
-    * to set a new address. Typically, a user would want to set a new address manually after clicking the 
-    * ‘forget me’ button.
-    * @param emailAddress 
-    * @returns True on success, false on failure
-    */
+     * Forget the current email address. This will not stop the session, the existing session will be maintained.
+     * A subsequent call to get_email_address will fetch a new email address or the client can call set_email_user
+     * to set a new address. Typically, a user would want to set a new address manually after clicking the 
+     * ‘forget me’ button.
+     * @param emailAddress 
+     * @returns True on success, false on failure
+     */
     async forgetEmailAddress(emailAddress: string): Promise<boolean | undefined> {
         const payload = { f: 'forget_me', lang: 'en', email_addr: emailAddress };
         const response = await this.sendRequest(payload);

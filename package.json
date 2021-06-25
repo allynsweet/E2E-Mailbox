@@ -1,7 +1,7 @@
 {
-  "name": "int-test-mail",
+  "name": "e2e-mailbox",
   "version": "1.0.0",
-  "description": "An integration of GuerillaMail to run integration tests with real emails.",
+  "description": "E2E test your email notification system using GuerrillaMail API.",
   "main": "index.js",
   "author": "Allyn Sweet",
   "license": "MIT",

@@ -9,7 +9,8 @@
     "build": "tsc",
     "format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\"",
     "lint": "tslint -p tsconfig.json",
-    "test": "jest --config jestconfig.json"
+    "test": "jest --config jestconfig.json",
+    "prepare": "yarn build && yarn lint && yarn test"
   },
   "devDependencies": {
     "@types/jest": "^26.0.23",

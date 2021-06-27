@@ -200,9 +200,9 @@ export default class IntegrationMailbox {
     extractLinksFromEmail(email: EmailResponse): string[] {
         const extractedUrls: string[] = [];
         const splitEmailBody = email.mail_body.split('href="');
-        const urlElements = splitEmailBody.filter(email =>
-            email.substring(0, 4) === 'http'
-            || email.substring(0, 4) === 'www.');
+        const urlElements = splitEmailBody.filter(emailBodyLine =>
+            emailBodyLine.substring(0, 4) === 'http'
+            || emailBodyLine.substring(0, 4) === 'www.');
         urlElements.forEach(splitUrl => {
             // splitUrl looks like `example.com/" />...` right now
             const fullUrl = splitUrl.split('"')[0];

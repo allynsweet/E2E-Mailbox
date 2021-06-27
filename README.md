@@ -50,6 +50,10 @@ Each email has an `email_id` associated with it, this ID could be used to fetch 
 ```js
 const fullEmail = await mailbox.fetchEmailById(emailID);
 ```
+#### Delete Email by ID
+```js
+const isEmailDeleted = await mailer.deleteEmailById(email.mail_id);
+```
 ### Example Usage in Tests
 #### Checking if email was generated
 The first test in the suite should generate a new email to be used by later tests.

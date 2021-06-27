@@ -22,7 +22,7 @@ yarn add e2e-mailbox
 ### Setup
 #### Creating an Email Address
 ```js
-import IntegrationMailbox from 'int-test-mail'
+import IntegrationMailbox from 'e2e-mailbox'
 
 const mailbox = new IntegrationMailbox();
 // This will generate a new email address for you to use in your tests
@@ -49,6 +49,38 @@ const emailList = await mailbox.fetchEmailList();
 Each email has an `email_id` associated with it, this ID could be used to fetch all attachments and body of an email.
 ```js
 const fullEmail = await mailbox.fetchEmailById(emailID);
+```
+### Example Usage in Tests
+#### Checking if email was generated
+The first test in the suite should generate a new email to be used my later tests.
+```js
+const mailer = new IntegrationMailbox();
+let emailAddress = '';
+test('should generate an email properly', async () => {
+    emailAddress = await mailer.createEmailAddress();
+    expect(emailAddress).toBeDefined();
+});
+```
+#### Checking if email was sent
+After registering for your service during the integration test, we should test to make sure the email was sent out in a timely manner.
+```js
+  it('should send a confirm account email', async () => {
+    // 'Confirm Your Email' is the subject line of the email in this case
+    const foundEmail = await mailbox.waitForEmail('Confirm Your Email', 100);
+    expect(!!foundEmail).toBeTruthy();
+  });
+```
+Next, if you have a confirmation link in the email, you could pull it from the email body:
+```js
+  it('should confirm account and go to login page', async () => {
+    expect(foundEmail).toBeDefined();
+    if (!foundEmail) { return; }
+    const urls = mailer.extractLinksFromEmail(foundEmail);
+    const confirmUrl = urls.filter(url => url.includes('https://example.com/your_confirm_url'))[0];
+    expect(confirmUrl).toBeDefined();
+    if (!confirmUrl) { return; }
+    // navigate to your confirmUrl in your test
+  });
 ```
 ## License
 

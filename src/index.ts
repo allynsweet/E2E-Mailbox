@@ -162,7 +162,7 @@ export default class IntegrationMailbox {
      * Wait for email to arrive in inbox, and return the fetched email
      * @param subjectLine - the subject line belonging to the email.
      * @param maxLimit - the max time to wait for the email to arrive, default is 1 minute.
-     * @returns
+     * @returns EmailResponse | undefined
      */
     async waitForEmail(subjectLine: string, maxLimitInSec = 60): Promise<EmailResponse | undefined> {
         let hasEmailArrived = false;
@@ -189,5 +189,25 @@ export default class IntegrationMailbox {
             foundEmail = await this.fetchEmailById(foundEmail.mail_id)
         }
         return foundEmail;
+    }
+
+    /**
+     * Extract all urls from <a> hrefs from an email body. This will be returned
+     * as an array of strings containing the urls.
+     * @param email 
+     * @returns all hrefs from an email body
+     */
+    extractLinksFromEmail(email: EmailResponse): string[] {
+        const extractedUrls: string[] = [];
+        const splitEmailBody = email.mail_body.split('href="');
+        const urlElements = splitEmailBody.filter(email =>
+            email.substring(0, 4) === 'http'
+            || email.substring(0, 4) === 'www.');
+        urlElements.forEach(splitUrl => {
+            // splitUrl looks like `example.com/" />...` right now
+            const fullUrl = splitUrl.split('"')[0];
+            extractedUrls.push(fullUrl);
+        });
+        return extractedUrls;
     }
 }

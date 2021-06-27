@@ -29,6 +29,15 @@ test('should wait for email', async () => {
     expect(emailResponse.mail_subject).toEqual(emailList[0].mail_subject);
 });
 
+test('should pull urls from email body', async () => {
+    const email: EmailResponse = { ...emailList[0] };
+    const website = 'https://example.com';
+    email.mail_body += `<a href="${website}" />`
+    const urls = await mailer.extractLinksFromEmail(email);
+    expect(urls.length).toEqual(1);
+    expect(urls[0]).toEqual(website);
+});
+
 test('should delete email by ID', async () => {
     const isEmailDeleted = await mailer.deleteEmailById(emailList[0].mail_id);
     expect(isEmailDeleted).toBeTruthy();

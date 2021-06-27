@@ -52,7 +52,7 @@ const fullEmail = await mailbox.fetchEmailById(emailID);
 ```
 ### Example Usage in Tests
 #### Checking if email was generated
-The first test in the suite should generate a new email to be used my later tests.
+The first test in the suite should generate a new email to be used by later tests.
 ```js
 const mailer = new IntegrationMailbox();
 let emailAddress = '';

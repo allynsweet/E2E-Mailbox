@@ -50,14 +50,18 @@ Each email has an `email_id` associated with it, this ID could be used to fetch 
 ```js
 const fullEmail = await mailbox.fetchEmailById(emailID);
 ```
+#### Delete Email by ID
+```js
+const isEmailDeleted = await mailbox.deleteEmailById(email.mail_id);
+```
 ### Example Usage in Tests
 #### Checking if email was generated
-The first test in the suite should generate a new email to be used my later tests.
+The first test in the suite should generate a new email to be used by later tests.
 ```js
-const mailer = new IntegrationMailbox();
+const mailbox = new IntegrationMailbox();
 let emailAddress = '';
 test('should generate an email properly', async () => {
-    emailAddress = await mailer.createEmailAddress();
+    emailAddress = await mailbox.createEmailAddress();
     expect(emailAddress).toBeDefined();
 });
 ```
@@ -75,7 +79,7 @@ Next, if you have a confirmation link in the email, you could pull it from the e
   it('should confirm account and go to login page', async () => {
     expect(foundEmail).toBeDefined();
     if (!foundEmail) { return; }
-    const urls = mailer.extractLinksFromEmail(foundEmail);
+    const urls = mailbox.extractLinksFromEmail(foundEmail);
     const confirmUrl = urls.filter(url => url.includes('https://example.com/your_confirm_url'))[0];
     expect(confirmUrl).toBeDefined();
     if (!confirmUrl) { return; }

@@ -6,6 +6,10 @@
   "types": "lib/index.d.ts",
   "author": "Allyn Sweet",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/allynsweet/E2E-Mailbox.git"
+  },
   "scripts": {
     "build": "tsc",
     "format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\"",

@@ -22,9 +22,9 @@ yarn add e2e-mailbox
 ### Setup
 #### Creating an Email Address
 ```js
-import IntegrationMailbox from 'e2e-mailbox'
+import E2EMailbox from 'e2e-mailbox'
 
-const mailbox = new IntegrationMailbox();
+const mailbox = new E2EMailbox();
 // This will generate a new email address for you to use in your tests
 const emailAddress = await mailbox.createEmailAddress();
 ```

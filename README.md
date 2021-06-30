@@ -13,7 +13,7 @@ A fully-typed and tested JS library for adding email notification testing to you
 
 ### Installation
 
-Install the **E2E Mailbox** package with [NPM](https://www.npmjs.org/) or yarn:
+Install the **E2E Mailbox** package with [NPM](https://www.npmjs.com/package/e2e-mailbox) or yarn:
 
 ```sh
 npm install e2e-mailbox

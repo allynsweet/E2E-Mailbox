@@ -39,7 +39,7 @@ export default class IntegrationMailbox {
      * @param payload
      * @returns EmailResponse | undefined
      */
-    private async sendRequest(payload: any, isRetry = false): Promise<AxiosResponse | undefined> {
+    private async sendRequest(payload: any, isRetry = 0): Promise<AxiosResponse | undefined> {
         try {
             // "ip" and "agent" are required parameters, those values were taken straight from
             // Guerilla's API docs.
@@ -49,14 +49,10 @@ export default class IntegrationMailbox {
             const response = await axios.get(this.API_URL, { params });
             return response;
         } catch (error) {
-            if (!error.data) {
-                // tslint:disable-next-line:no-console
-                console.error(error);
-                return;
-            }
-            // Automatically retry once if it's a 502 error
-            if (error.data.includes('502 Bad Gateway') && !isRetry) {
-                const response = await this.sendRequest(payload, true);
+            if (!error.data) { return; }
+            // Automatically retry 3 times if it's a 502 error
+            if (error.data.includes('502 Bad Gateway') && isRetry < 3) {
+                const response = await this.sendRequest(payload, isRetry + 1);
                 return response;
             }
         }

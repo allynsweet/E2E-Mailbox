@@ -4,6 +4,7 @@ const mailbox = new E2EMailbox();
 let emailList: Array<EmailResponse> = [];
 let emailAddress: string | undefined = '';
 test('should generate an email properly', async () => {
+    expect.assertions(2);
     emailAddress = await mailbox.createEmailAddress();
     expect(emailAddress).toBeDefined();
     if (!emailAddress) { return; }
@@ -11,11 +12,13 @@ test('should generate an email properly', async () => {
 });
 
 test('should return an email list with one email', async () => {
+    expect.assertions(1);
     emailList = await mailbox.fetchEmailList();
     expect(emailList.length).toEqual(1);
 });
 
 test('should fetch email by ID', async () => {
+    expect.assertions(2);
     const fullEmail = await mailbox.fetchEmailById(emailList[0].mail_id);
     expect(fullEmail).toBeDefined();
     if (!fullEmail) { return; }
@@ -23,6 +26,7 @@ test('should fetch email by ID', async () => {
 });
 
 test('should wait for email', async () => {
+    expect.assertions(2);
     const emailResponse: EmailResponse | undefined = await mailbox.waitForEmail(emailList[0].mail_subject);
     expect(emailResponse).toBeDefined();
     if (!emailResponse) { return; }
@@ -30,6 +34,7 @@ test('should wait for email', async () => {
 });
 
 test('should pull urls from email body', async () => {
+    expect.assertions(2);
     const email: EmailResponse = { ...emailList[0] };
     const website = 'https://example.com';
     email.mail_body += `<a href="${website}" />`
@@ -39,6 +44,7 @@ test('should pull urls from email body', async () => {
 });
 
 test('should delete email by ID', async () => {
+    expect.assertions(2);
     const isEmailDeleted = await mailbox.deleteEmailById(emailList[0].mail_id);
     expect(isEmailDeleted).toBeTruthy();
     if (!isEmailDeleted) { return; }
@@ -47,6 +53,7 @@ test('should delete email by ID', async () => {
 });
 
 test('should forget email address', async () => {
+    expect.assertions(2);
     expect(emailAddress).toBeDefined();
     if (!emailAddress) { return; }
     const isEmailForgotten = await mailbox.forgetEmailAddress(emailAddress);

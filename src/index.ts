@@ -52,10 +52,16 @@ export default class IntegrationMailbox {
             if (!error.data) { return; }
             // Automatically retry 3 times if it's a 502 error
             if (error.data.includes('502 Bad Gateway') && isRetry < 3) {
+                // Wait 3 seconds before retrying if there's a 502 error.
+                await this.sleep(3000);
                 const response = await this.sendRequest(payload, isRetry + 1);
                 return response;
             }
         }
+    }
+
+    private async sleep(timeInMs: number): Promise<void> {
+        await new Promise(r => setTimeout(r, timeInMs));
     }
 
     /** --- Public Functions --- */
@@ -177,8 +183,11 @@ export default class IntegrationMailbox {
                     foundEmail = email;
                 }
             });
-            await new Promise(r => setTimeout(r, INCREMENT));
-            elapsedTime += INCREMENT;
+            // If email hasn't arrived yet, wait and add time to elapsed time.
+            if (!hasEmailArrived) {
+                await this.sleep(INCREMENT);
+                elapsedTime += INCREMENT;
+            }
         }
         // If the email was found, fetch the full email by ID.
         if (foundEmail) {

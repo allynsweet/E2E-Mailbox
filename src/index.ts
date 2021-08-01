@@ -28,9 +28,16 @@ export default class IntegrationMailbox {
      * address randomly.
      * @returns email address
      */
-    async createEmailAddress(mailboxProvider: MailboxProvider = 'DEVELOPER'): Promise<string | undefined> {
-        this.mailbox = this.mailboxProviders[mailboxProvider];
-        const email = await this.mailbox.createEmailAddress();
+    async createEmailAddress(): Promise<string | undefined> {
+        if (!this.mailbox) { throw Error(noMailboxError); }
+        let email = await this.mailbox.createEmailAddress();
+        // If service cannot create an address, use the opposite provider.
+        if (!email) {
+            const newMailbox: MailboxProvider = this.mailbox.PROVIDER === 'DEVELOPER' ? 'GUERRILLA' : 'DEVELOPER';
+            this.mailbox = this.mailboxProviders[newMailbox];
+            // Attempt to create an email address again using a different provider.
+            email = await this.mailbox.createEmailAddress();
+        }
         return email;
     }
 

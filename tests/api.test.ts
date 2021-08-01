@@ -1,4 +1,5 @@
-import E2EMailbox, { EmailResponse } from '../src/index';
+import E2EMailbox from '../src/index';
+import { EmailResponse } from '../src/types';
 
 const mailbox = new E2EMailbox();
 let emailList: Array<EmailResponse> = [];
@@ -12,7 +13,9 @@ test('should generate an email properly', async () => {
 });
 
 test('should return an email list with one email', async () => {
-    expect.assertions(1);
+    expect.assertions(2);
+    const foundEmail = await mailbox.waitForEmail('Welcome to DeveloperMail.com!');
+    expect(foundEmail).toBeDefined();
     emailList = await mailbox.fetchEmailList();
     expect(emailList.length).toEqual(1);
 });

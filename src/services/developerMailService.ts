@@ -1,6 +1,7 @@
 import axios, { AxiosResponse, Method } from 'axios';
 import { EmailResponse, MailboxProvider } from '../types';
 import MailboxService from './mailboxService';
+import { ParsedMail, simpleParser } from 'mailparser';
 
 interface CreateEmailResponse {
     name: string;

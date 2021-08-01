@@ -11,7 +11,7 @@ A fully-typed and tested JS library for adding email notification testing to you
 - Fetching a reset password pin from an email
 - Ensuring your system sends the correct email after an action is committed on your website
 
-Configurable to use either DeveloperMail or GuerrillaMail as the temporary mailbox providers. If one is not working, the other will be used automatically to prevent disruption.
+Configurable to use either DeveloperMail or GuerrillaMail as the temporary mailbox providers. These are free services generously provided to create short-lived emails addresses. If one provider is not working, the other will be used automatically to prevent disruption.
 
 ## Usage
 
@@ -30,7 +30,7 @@ yarn add e2e-mailbox
 
 ```js
 import E2EMailbox from 'e2e-mailbox';
-// This will create a new mailbox using DeveloperAPI as the provider.
+// This will create a new mailbox using DeveloperMail API as the provider.
 // To set GuerrillaMail, pass 'GUERRILLA' to the constructor.
 const mailbox = new E2EMailbox();
 // This will generate a new email address for you to use in your tests

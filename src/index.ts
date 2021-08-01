@@ -1,68 +1,20 @@
 import axios, { AxiosResponse } from 'axios';
+import DeveloperMailService from './services/developerMailService';
+import GuerrillaMailService from './services/guerrillaMailService';
+import MailboxService from './services/mailboxService';
+import { CreateEmailResponse, EmailResponse, SetEmailResponse } from './types';
 
-export interface CreateEmailResponse {
-    email_addr: string;
-    email_timestamp: number;
-    alias: string;
-    sid_token: string;
-}
-
-export interface EmailListResponse {
-    list: EmailResponse[];
-}
-
-export interface EmailResponse {
-    mail_id: string;
-    mail_from: string;
-    mail_timestamp: string;
-    mail_subject: string;
-    mail_excerpt: string;
-    mail_body: string;
-}
-
-export interface SetEmailResponse {
-    email_addr: string;
-    email_timestamp: string;
-    s_active: string;
-    s_date: string;
-    s_time: string;
-    s_time_expires: string;
-}
+type MailboxProvider = 'DEVELOPER' | 'GUERRILLA';
+const noMailboxError = 'There is currently no mailbox set. Did you forget to call `createEmailAddress` first?';
 
 export default class IntegrationMailbox {
-    private API_URL = 'http://api.guerrillamail.com/ajax.php'
 
-    private sidToken = '';
-
-    /**
-     * Sends request to Guerrilla Mail API with required parameters.
-     * @param payload
-     * @returns EmailResponse | undefined
-     */
-    private async sendRequest(payload: any, isRetry = 0): Promise<AxiosResponse | undefined> {
-        try {
-            // "ip" and "agent" are required parameters, those values were taken straight from
-            // Guerilla's API docs.
-            const params = {
-                ...payload, sid_token: this.sidToken, ip: '127.0.0.1', agent: 'Mozilla_foo_bar',
-            };
-            const response = await axios.get(this.API_URL, { params });
-            return response;
-        } catch (error) {
-            if (!error.data) { return; }
-            // Automatically retry 3 times if it's a 502 error
-            if (error.data.includes('502 Bad Gateway') && isRetry < 3) {
-                // Wait 3 seconds before retrying if there's a 502 error.
-                await this.sleep(3000);
-                const response = await this.sendRequest(payload, isRetry + 1);
-                return response;
-            }
-        }
+    private mailboxProviders = {
+        'GUERRILLA': new GuerrillaMailService(),
+        'DEVELOPER': new DeveloperMailService()
     }
 
-    private async sleep(timeInMs: number): Promise<void> {
-        await new Promise(r => setTimeout(r, timeInMs));
-    }
+    private mailbox: MailboxService | undefined;
 
     /** --- Public Functions --- */
 
@@ -73,13 +25,10 @@ export default class IntegrationMailbox {
      * address randomly.
      * @returns email address
      */
-    async createEmailAddress(): Promise<string | undefined> {
-        const payload = { f: 'get_email_address' };
-        const response = await this.sendRequest(payload);
-        if (!response) { return; }
-        const creationResponse: CreateEmailResponse = response.data;
-        this.sidToken = creationResponse.sid_token;
-        return creationResponse.email_addr;
+    async createEmailAddress(mailboxProvider: MailboxProvider = 'DEVELOPER'): Promise<string | undefined> {
+        this.mailbox = this.mailboxProviders[mailboxProvider];
+        const email = await this.mailbox.createEmailAddress();
+        return email;
     }
 
     /**
@@ -87,32 +36,9 @@ export default class IntegrationMailbox {
      * @returns Array of emails
      */
     async fetchEmailList(): Promise<EmailResponse[]> {
-        let emailList: EmailResponse[] = [];
-        const payload = { f: 'get_email_list', offset: 0 };
-        const response = await this.sendRequest(payload);
-        if (!response) { return emailList; }
-        const emailListResponse: EmailListResponse = response.data;
-        emailList = emailListResponse.list;
+        if (!this.mailbox) { throw Error(noMailboxError); }
+        const emailList: EmailResponse[] = await this.mailbox.fetchEmailList();
         return emailList;
-    }
-
-
-    /**
-     * Set the email address to a different email address. If the email address is a subscriber, 
-     * then return the subscription details. If the email is not a subscriber, then the email address
-     * will be given 60 minutes again. A new email address will be generated if the email address is 
-     * not in the database and a welcome email message will be generated.
-     * @param emailAddress 
-     * @returns True on success, false on failure
-     */
-    async setEmailAddress(emailAddress: string): Promise<SetEmailResponse | undefined> {
-        // If a full email is passed, only use the username portion.
-        const emailUsername = emailAddress.split('@')[0];
-        const payload = { f: 'set_email_user', lang: 'en', email_user: emailUsername };
-        const response = await this.sendRequest(payload);
-        if (!response) { return; }
-        const responseData: SetEmailResponse = response.data;
-        return responseData;
     }
 
     /**
@@ -124,11 +50,9 @@ export default class IntegrationMailbox {
      * @returns True on success, false on failure
      */
     async forgetEmailAddress(emailAddress: string): Promise<boolean | undefined> {
-        const payload = { f: 'forget_me', lang: 'en', email_addr: emailAddress };
-        const response = await this.sendRequest(payload);
-        if (!response) { return; }
-        const responseData: boolean = response.data;
-        return responseData;
+        if (!this.mailbox) { throw Error(noMailboxError); }
+        const isAddressDeleted = await this.mailbox.forgetEmailAddress(emailAddress);
+        return isAddressDeleted;
     }
 
     /**
@@ -137,12 +61,9 @@ export default class IntegrationMailbox {
      * @returns true on success, false on failure
      */
     async deleteEmailById(emailId: string): Promise<boolean | undefined> {
-        const payload = { f: 'del_email', lang: 'en', 'email_ids[]': emailId };
-        const response = await this.sendRequest(payload);
-        if (!response) { return; }
-        const responseData: string = response.data;
-        // API returns an empty string as body on success.
-        return !!responseData;
+        if (!this.mailbox) { throw Error(noMailboxError); }
+        const isEmailDeleted = await this.mailbox.deleteEmailById(emailId);
+        return isEmailDeleted;
     }
 
     /**
@@ -153,11 +74,9 @@ export default class IntegrationMailbox {
      * @returns 
      */
     async fetchEmailById(emailId: string): Promise<EmailResponse | undefined> {
-        const payload = { f: 'fetch_email', email_id: emailId };
-        const response = await this.sendRequest(payload);
-        if (!response) { return; }
-        const responseData: EmailResponse = response.data;
-        return responseData;
+        if (!this.mailbox) { throw Error(noMailboxError); }
+        const email = this.mailbox.fetchEmailById(emailId);
+        return email;
     }
 
     /**
@@ -167,6 +86,7 @@ export default class IntegrationMailbox {
      * @returns EmailResponse | undefined
      */
     async waitForEmail(subjectLine: string, maxLimitInSec = 60): Promise<EmailResponse | undefined> {
+        if (!this.mailbox) { throw Error(noMailboxError); }
         let hasEmailArrived = false;
         let elapsedTime = 0;
         let foundEmail: EmailResponse | undefined;
@@ -185,7 +105,7 @@ export default class IntegrationMailbox {
             });
             // If email hasn't arrived yet, wait and add time to elapsed time.
             if (!hasEmailArrived) {
-                await this.sleep(INCREMENT);
+                await this.mailbox.sleep(INCREMENT);
                 elapsedTime += INCREMENT;
             }
         }

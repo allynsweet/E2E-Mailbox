@@ -102,7 +102,7 @@ class DeveloperMailService extends MailboxService {
 
         // Response value comes as Mime 1.0, we must parse this to conform with our
         // read model.
-        for (let message of messages.result) {
+        for (const message of messages.result) {
             const email = await this.buildEmailResponse(message.value, message.key);
             emailList.push(email);
         }

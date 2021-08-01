@@ -104,8 +104,8 @@ export default class IntegrationMailbox {
         let elapsedTime = 0;
         let foundEmail: EmailResponse | undefined;
         const maxLimitInMs = maxLimitInSec * 1000;
-        const INCREMENT = 7500;
-        // Check email every 7.5 seconds until the email is found
+        const INCREMENT = 5000;
+        // Check email every 5 seconds until the email is found
         // or the maxLimit is reached.
         while (elapsedTime < maxLimitInMs && !hasEmailArrived) {
             const emails = await this.fetchEmailList();

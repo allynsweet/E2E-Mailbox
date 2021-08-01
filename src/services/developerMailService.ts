@@ -1,5 +1,5 @@
 import axios, { AxiosResponse, Method } from 'axios';
-import { EmailResponse } from '../types';
+import { EmailResponse, MailboxProvider } from '../types';
 import MailboxService from './mailboxService';
 
 interface CreateEmailResponse {

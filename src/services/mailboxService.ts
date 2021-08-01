@@ -1,7 +1,8 @@
-import { EmailResponse } from '../types';
+import { EmailResponse, MailboxProvider } from '../types';
 
 abstract class MailboxService {
     abstract API_URL: string;
+    abstract PROVIDER: MailboxProvider;
 
     async sleep(timeInMs: number): Promise<void> {
         await new Promise(r => setTimeout(r, timeInMs));

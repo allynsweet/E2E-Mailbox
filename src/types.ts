@@ -1,3 +1,5 @@
+export type MailboxProvider = 'DEVELOPER' | 'GUERRILLA';
+
 export interface CreateEmailResponse {
     email_addr: string;
     email_timestamp: number;

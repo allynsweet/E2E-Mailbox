@@ -1,9 +1,10 @@
 import axios, { AxiosResponse } from 'axios';
-import { CreateEmailResponse, EmailListResponse, EmailResponse, SetEmailResponse } from '../types';
+import { CreateEmailResponse, EmailListResponse, EmailResponse, MailboxProvider, SetEmailResponse } from '../types';
 import MailboxService from './mailboxService';
 
 class GuerrillaMailService extends MailboxService {
     API_URL = 'http://api.guerrillamail.com/ajax.php';
+    PROVIDER: MailboxProvider = 'GUERRILLA';
     private sidToken = '';
 
     private async sendRequest(payload: any, isRetry = 0): Promise<AxiosResponse | undefined> {

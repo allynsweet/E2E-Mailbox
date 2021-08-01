@@ -2,9 +2,8 @@ import axios, { AxiosResponse } from 'axios';
 import DeveloperMailService from './services/developerMailService';
 import GuerrillaMailService from './services/guerrillaMailService';
 import MailboxService from './services/mailboxService';
-import { CreateEmailResponse, EmailResponse, SetEmailResponse } from './types';
+import { EmailResponse, MailboxProvider } from './types';
 
-type MailboxProvider = 'DEVELOPER' | 'GUERRILLA';
 const noMailboxError = 'There is currently no mailbox set. Did you forget to call `createEmailAddress` first?';
 
 export default class IntegrationMailbox {
@@ -17,6 +16,10 @@ export default class IntegrationMailbox {
     private mailbox: MailboxService | undefined;
 
     /** --- Public Functions --- */
+
+    constructor(mailboxProvider: MailboxProvider = 'DEVELOPER') {
+        this.mailbox = this.mailboxProviders[mailboxProvider];
+    }
 
     /**
      * Initialize a session and set the client with an email address. If the session already exists, 

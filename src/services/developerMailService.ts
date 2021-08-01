@@ -29,6 +29,13 @@ class DeveloperMailService extends MailboxService {
     private token = '';
     private mailboxName = '';
 
+    /**
+     * Send request to DeveloperMail API.
+     * @param data 
+     * @param method 
+     * @param endpoint 
+     * @returns AxiosResponse on success, undefined on failure.
+     */
     private async sendRequest(data: any, method: Method, endpoint: string): Promise<AxiosResponse | undefined> {
         try {
             // Set Authentication header for DeveloperMail
@@ -46,7 +53,13 @@ class DeveloperMailService extends MailboxService {
         }
     }
 
-    private async buildEmailResponse(message: string, mailId: string): Promise<EmailResponse> {
+    /**
+     * Convert Mime-Type response from DeveloperMail to EmailResponse
+     * @param message 
+     * @param mailId 
+     * @returns generated EmailResponse
+     */
+    private async convertMimeToEmailResponse(message: string, mailId: string): Promise<EmailResponse> {
         const parsedMessage: ParsedMail = await simpleParser(message);
         const messageFrom = !!parsedMessage.from ? parsedMessage.from.text : '';
         const messageDate = parsedMessage.date ? `${parsedMessage.date.getTime()}` : '';
@@ -103,7 +116,7 @@ class DeveloperMailService extends MailboxService {
         // Response value comes as Mime 1.0, we must parse this to conform with our
         // read model.
         for (const message of messages.result) {
-            const email = await this.buildEmailResponse(message.value, message.key);
+            const email = await this.convertMimeToEmailResponse(message.value, message.key);
             emailList.push(email);
         }
 
@@ -151,7 +164,7 @@ class DeveloperMailService extends MailboxService {
         );
         if (!response) { return; }
         const responseData: string = response.data.result;
-        const email: EmailResponse = await this.buildEmailResponse(responseData, emailId);
+        const email: EmailResponse = await this.convertMimeToEmailResponse(responseData, emailId);
         return email;
     }
 

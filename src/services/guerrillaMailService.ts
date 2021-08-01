@@ -7,6 +7,12 @@ class GuerrillaMailService extends MailboxService {
     PROVIDER: MailboxProvider = 'GUERRILLA';
     private sidToken = '';
 
+    /**
+     * Send request to the GuerrillaMail API.
+     * @param payload 
+     * @param isRetry 
+     * @returns AxiosResponse on success, undefined on failure.
+     */
     private async sendRequest(payload: any, isRetry = 0): Promise<AxiosResponse | undefined> {
         try {
             // "ip" and "agent" are required parameters, those values were taken straight from

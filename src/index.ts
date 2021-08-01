@@ -17,15 +17,19 @@ export default class IntegrationMailbox {
 
     /** --- Public Functions --- */
 
+    /**
+     * Creates a mailbox session with the designated provider. By default
+     * DeveloperMail API will be used. 
+     * @param mailboxProvider 
+     */
     constructor(mailboxProvider: MailboxProvider = 'DEVELOPER') {
         this.mailbox = this.mailboxProviders[mailboxProvider];
     }
 
     /**
-     * Initialize a session and set the client with an email address. If the session already exists, 
-     * then it will return the email address details of the existing session. If a new session needs to be created, then it
-     * will first check for the SUBSCR cookie to create a session for a subscribed address, otherwise it will create new email
-     * address randomly.
+     * Initialize a session and set the client with an email address. 
+     * If one email service is not working, the backup will be used 
+     * automatically to prevent disruption.
      * @returns email address
      */
     async createEmailAddress(): Promise<string | undefined> {
@@ -33,7 +37,9 @@ export default class IntegrationMailbox {
         let email = await this.mailbox.createEmailAddress();
         // If service cannot create an address, use the opposite provider.
         if (!email) {
-            const newMailbox: MailboxProvider = this.mailbox.PROVIDER === 'DEVELOPER' ? 'GUERRILLA' : 'DEVELOPER';
+            const newMailbox: MailboxProvider = this.mailbox.PROVIDER === 'DEVELOPER'
+                ? 'GUERRILLA'
+                : 'DEVELOPER';
             this.mailbox = this.mailboxProviders[newMailbox];
             // Attempt to create an email address again using a different provider.
             email = await this.mailbox.createEmailAddress();
@@ -52,10 +58,8 @@ export default class IntegrationMailbox {
     }
 
     /**
-     * Forget the current email address. This will not stop the session, the existing session will be maintained.
-     * A subsequent call to get_email_address will fetch a new email address or the client can call set_email_user
-     * to set a new address. Typically, a user would want to set a new address manually after clicking the 
-     * ‘forget me’ button.
+     * Forget the current email address. This will delete the mailbox and any emails 
+     * it contains.
      * @param emailAddress 
      * @returns True on success, false on failure
      */

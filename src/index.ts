@@ -1,4 +1,3 @@
-import axios, { AxiosResponse } from 'axios';
 import DeveloperMailService from './services/developerMailService';
 import GuerrillaMailService from './services/guerrillaMailService';
 import MailboxService from './services/mailboxService';
@@ -8,7 +7,7 @@ const noMailboxError = 'There is currently no mailbox set. Did you forget to cal
 
 export default class IntegrationMailbox {
 
-    private mailboxProviders = {
+    private mailboxProviders: Record<MailboxProvider, MailboxService> = {
         'GUERRILLA': new GuerrillaMailService(),
         'DEVELOPER': new DeveloperMailService()
     }

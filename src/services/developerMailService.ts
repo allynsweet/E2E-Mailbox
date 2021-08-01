@@ -11,28 +11,58 @@ interface CreateEmailResponse {
 interface MessageIdsResponse {
     result: string[];
 }
+
 interface GetMessagesResponse {
     result: { key: string, value: string }[];
 }
 
+interface SendMessagePayload {
+    subject: string;
+    body: string;
+    isHtml: boolean;
+}
+
 class DeveloperMailService extends MailboxService {
     API_URL = 'https://www.developermail.com/api/v1';
+    PROVIDER: MailboxProvider = 'DEVELOPER';
+
     private token = '';
     private mailboxName = '';
 
-    private async sendRequest(params: any, method: Method, endpoint: string): Promise<AxiosResponse | undefined> {
+    private async sendRequest(data: any, method: Method, endpoint: string): Promise<AxiosResponse | undefined> {
         try {
             // Set Authentication header for DeveloperMail
-            const headers = !!this.token ? {} : {
-                'X-MailboxToken': this.token
-            };
+            const headers = !!this.token ? {
+                'X-MailboxToken': this.token,
+                'Content-Type': 'application/json'
+            } : {};
+            const payloadType = method === 'GET' ? 'params' : 'data';
             const response = await axios(`${this.API_URL}${endpoint}`, {
-                params, method, headers
+                [payloadType]: data, method, headers
             });
             return response;
         } catch (error) {
             if (!error.data) { return; }
         }
+    }
+
+    private async buildEmailResponse(message: string, mailId: string): Promise<EmailResponse> {
+        const parsedMessage: ParsedMail = await simpleParser(message);
+        const messageFrom = !!parsedMessage.from ? parsedMessage.from.text : '';
+        const messageDate = parsedMessage.date ? `${parsedMessage.date.getTime()}` : '';
+        const messageSubject = parsedMessage.subject || '';
+        const messageBody = parsedMessage.html || '';
+        // v1.0 read model was tied to GuerrillaMail's response type, for
+        // compatibility-sake we will convert DeveloperMail to the same type.
+        const email: EmailResponse = {
+            mail_id: mailId,
+            mail_from: messageFrom,
+            mail_timestamp: messageDate,
+            mail_subject: messageSubject,
+            mail_excerpt: '',
+            mail_body: messageBody
+        };
+        return email;
     }
 
     /**
@@ -65,31 +95,18 @@ class DeveloperMailService extends MailboxService {
 
         // Fetch list of messages from the IDs gathered in getMessageIdsResponse
         const getMessagesResponse = await this.sendRequest(
-            emailListResponse.result, 'POST', `/mailbox/${this.mailboxName}`
+            emailListResponse.result, 'POST', `/mailbox/${this.mailboxName}/messages`
         );
         if (!getMessagesResponse) { return emailList; }
         const messages: GetMessagesResponse = getMessagesResponse.data;
 
         // Response value comes as Mime 1.0, we must parse this to conform with our
         // read model.
-        messages.result.forEach(message => {
-            const splitResponse = message.value.split('\r\n');
-            const messageFrom = splitResponse[1].split('From: ')[1];
-            const messageDate = splitResponse[3].split('Date: ')[1];
-            const messageSubject = splitResponse[4].split('Subject: ')[1];
-            const messageBody = splitResponse[6].split('Content-Transfer-Encoding: ')[1];
-            // v1.0 read model was tied to GuerrillaMail's response type, for
-            // compatibility-sake we will convert DeveloperMail to the same type.
-            const email: EmailResponse = {
-                mail_id: message.key,
-                mail_from: messageFrom,
-                mail_timestamp: messageDate,
-                mail_subject: messageSubject,
-                mail_excerpt: '',
-                mail_body: messageBody
-            };
+        for (let message of messages.result) {
+            const email = await this.buildEmailResponse(message.value, message.key);
             emailList.push(email);
-        })
+        }
+
         return emailList;
     }
 
@@ -115,7 +132,7 @@ class DeveloperMailService extends MailboxService {
      */
     async deleteEmailById(emailId: string): Promise<boolean | undefined> {
         const response = await this.sendRequest(
-            {}, 'DELETE', `/mailbox/${this.mailboxName}/messages/{${emailId}}`
+            {}, 'DELETE', `/mailbox/${this.mailboxName}/messages/${emailId}`
         );
         if (!response) { return false; }
         return response.data.result;
@@ -133,7 +150,18 @@ class DeveloperMailService extends MailboxService {
             {}, 'GET', `/mailbox/${this.mailboxName}/messages/${emailId}`
         );
         if (!response) { return; }
-        const responseData: EmailResponse = response.data;
+        const responseData: string = response.data.result;
+        const email: EmailResponse = await this.buildEmailResponse(responseData, emailId);
+        return email;
+    }
+
+    async sendSelfMail(subject: string, body: string): Promise<boolean> {
+        const payload: SendMessagePayload = { subject, body, isHtml: true };
+        const response = await this.sendRequest(
+            payload, 'PUT', `/mailbox/${this.mailboxName}/messages`
+        );
+        if (!response) { return false; }
+        const responseData: boolean = response.data.result;
         return responseData;
     }
 }

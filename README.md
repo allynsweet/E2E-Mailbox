@@ -11,7 +11,7 @@ A fully-typed and tested JS library for adding email notification testing to you
 - Fetching a reset password pin from an email
 - Ensuring your system sends the correct email after an action is committed on your website
 
-Configurable to use either DeveloperMail or GuerrillaMail as the temporary mailbox providers. These are free services generously provided to create short-lived emails addresses. If one provider is not working, the other will be used automatically to prevent disruption.
+Configurable to use either DeveloperMail or GuerrillaMail as the temporary mailbox providers. These are free services generously provided to create short-lived email addresses. If one provider is not working, the other will be used automatically to prevent disruption.
 
 ## Usage
 

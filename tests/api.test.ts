@@ -1,7 +1,7 @@
 import E2EMailbox from '../src/index';
 import { EmailResponse } from '../src/types';
 
-const mailbox = new E2EMailbox();
+const mailbox = new E2EMailbox('GUERRILLA');
 let emailList: Array<EmailResponse> = [];
 let emailAddress: string | undefined = '';
 test('should generate an email properly', async () => {
@@ -14,7 +14,7 @@ test('should generate an email properly', async () => {
 
 test('should return an email list with one email', async () => {
     expect.assertions(2);
-    const foundEmail = await mailbox.waitForEmail('Welcome to DeveloperMail.com!');
+    const foundEmail = await mailbox.waitForEmail('Welcome');
     expect(foundEmail).toBeDefined();
     emailList = await mailbox.fetchEmailList();
     expect(emailList.length).toEqual(1);
@@ -25,7 +25,7 @@ test('should fetch email by ID', async () => {
     const fullEmail = await mailbox.fetchEmailById(emailList[0].mail_id);
     expect(fullEmail).toBeDefined();
     if (!fullEmail) { return; }
-    expect(fullEmail.mail_body.length).toBeGreaterThan(250);
+    expect(fullEmail.mail_body.length).toBeGreaterThan(150);
 });
 
 test('should wait for email', async () => {

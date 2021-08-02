@@ -1,3 +1,5 @@
+![example workflow](https://github.com/allynsweet/E2E-Mailbox/actions/workflows/node.js.yml/badge.svg)
+
 # E2E Mailbox
 
 E2E test your email notification system using [DeveloperMail API](https://www.developermail.com/) and [GuerrillaMail API](https://www.guerrillamail.com/).

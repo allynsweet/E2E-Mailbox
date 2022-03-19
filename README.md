@@ -113,11 +113,9 @@ it('should confirm account and go to login page', async () => {
     return;
   }
   const urls = mailbox.extractLinksFromEmail(foundEmail);
-  const confirmUrl = urls.filter((url) => url.includes('https://example.com/your_confirm_url'))[0];
+  const [confirmUrl] = urls.filter((url) => url.includes('https://example.com/your_confirm_url'));
   expect(confirmUrl).toBeDefined();
-  if (!confirmUrl) {
-    return;
-  }
+  if (!confirmUrl) return;
   // navigate to your confirmUrl in your test
 });
 ```

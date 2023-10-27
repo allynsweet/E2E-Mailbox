@@ -31,9 +31,9 @@ class DeveloperMailService extends MailboxService {
 
     /**
      * Send request to DeveloperMail API.
-     * @param data 
-     * @param method 
-     * @param endpoint 
+     * @param data
+     * @param method
+     * @param endpoint
      * @returns AxiosResponse on success, undefined on failure.
      */
     private async sendRequest(data: any, method: Method, endpoint: string): Promise<AxiosResponse | undefined> {
@@ -44,22 +44,21 @@ class DeveloperMailService extends MailboxService {
                 'Content-Type': 'application/json'
             } : {};
             const payloadType = method === 'GET' ? 'params' : 'data';
-            const response = await axios(`${this.API_URL}${endpoint}`, {
+            return axios(`${this.API_URL}${endpoint}`, {
                 [payloadType]: data, method, headers
             });
-            return response;
         } catch (error) {
-            if (!error.data) { return; }
+            return;
         }
     }
 
     /**
      * Convert Mime-Type response from DeveloperMail to EmailResponse
-     * @param message 
-     * @param mailId 
+     * @param message
+     * @param mailId
      * @returns generated EmailResponse
      */
-    private async convertMimeToEmailResponse(message: string, mailId: string): Promise<EmailResponse> {
+    private static async convertMimeToEmailResponse(message: string, mailId: string): Promise<EmailResponse> {
         const parsedMessage: ParsedMail = await simpleParser(message);
         const messageFrom = !!parsedMessage.from ? parsedMessage.from.text : '';
         const messageDate = parsedMessage.date ? `${parsedMessage.date.getTime()}` : '';
@@ -67,7 +66,7 @@ class DeveloperMailService extends MailboxService {
         const messageBody = parsedMessage.html || '';
         // v1.0 read model was tied to GuerrillaMail's response type, for
         // compatibility-sake we will convert DeveloperMail to the same type.
-        const email: EmailResponse = {
+        return {
             mail_id: mailId,
             mail_from: messageFrom,
             mail_timestamp: messageDate,
@@ -75,11 +74,10 @@ class DeveloperMailService extends MailboxService {
             mail_excerpt: '',
             mail_body: messageBody
         };
-        return email;
     }
 
     /**
-     * Initialize a session and set the client with an email address. If the session already exists, 
+     * Initialize a session and set the client with an email address. If the session already exists,
      * then it will return the email address details of the existing session. If a new session needs to be created, then it
      * will first check for the SUBSCR cookie to create a session for a subscribed address, otherwise it will create new email
      * address randomly.
@@ -116,7 +114,7 @@ class DeveloperMailService extends MailboxService {
         // Response value comes as Mime 1.0, we must parse this to conform with our
         // read model.
         for (const message of messages.result) {
-            const email = await this.convertMimeToEmailResponse(message.value, message.key);
+            const email = await DeveloperMailService.convertMimeToEmailResponse(message.value, message.key);
             emailList.push(email);
         }
 
@@ -126,37 +124,33 @@ class DeveloperMailService extends MailboxService {
     /**
      * Forget the current email address. This will not stop the session, the existing session will be maintained.
      * A subsequent call to get_email_address will fetch a new email address or the client can call set_email_user
-     * to set a new address. Typically, a user would want to set a new address manually after clicking the 
+     * to set a new address. Typically, a user would want to set a new address manually after clicking the
      * ‘forget me’ button.
-     * @param emailAddress 
      * @returns True on success, false on failure
      */
     async forgetEmailAddress(): Promise<boolean | undefined> {
         const response = await this.sendRequest({}, 'DELETE', `/mailbox/${this.mailboxName}`);
-        if (!response) { return; }
-        const responseData: boolean = response.data.result;
-        return responseData;
+        return !!response?.data?.result;
     }
 
     /**
      * Delete a specific email by ID.
-     * @param emailId 
+     * @param emailId
      * @returns true on success, false on failure
      */
     async deleteEmailById(emailId: string): Promise<boolean | undefined> {
         const response = await this.sendRequest(
             {}, 'DELETE', `/mailbox/${this.mailboxName}/messages/${emailId}`
         );
-        if (!response) { return false; }
-        return response.data.result;
+        return !!response?.data?.result;
     }
 
     /**
-     * Get the contents of an email. All HTML in the body of the email is filtered. 
+     * Get the contents of an email. All HTML in the body of the email is filtered.
      * Eg, Javascript, applets, iframes, etc is removed. Subject and email excerpt are escaped using HTML Entities.
      * Only emails owned by the current session id can be fetched.
-     * @param emailId 
-     * @returns 
+     * @param emailId
+     * @returns
      */
     async fetchEmailById(emailId: string): Promise<EmailResponse | undefined> {
         const response = await this.sendRequest(
@@ -164,8 +158,7 @@ class DeveloperMailService extends MailboxService {
         );
         if (!response) { return; }
         const responseData: string = response.data.result;
-        const email: EmailResponse = await this.convertMimeToEmailResponse(responseData, emailId);
-        return email;
+        return DeveloperMailService.convertMimeToEmailResponse(responseData, emailId);
     }
 
     async sendSelfMail(subject: string, body: string): Promise<boolean> {
@@ -173,9 +166,7 @@ class DeveloperMailService extends MailboxService {
         const response = await this.sendRequest(
             payload, 'PUT', `/mailbox/${this.mailboxName}/messages`
         );
-        if (!response) { return false; }
-        const responseData: boolean = response.data.result;
-        return responseData;
+        return !!response?.data?.result;
     }
 }
 

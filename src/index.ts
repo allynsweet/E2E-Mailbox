@@ -17,17 +17,17 @@ export default class IntegrationMailbox {
     /** --- Public Functions --- */
 
     /**
-     * Creates a mailbox session with the designated provider. By default
-     * DeveloperMail API will be used. 
-     * @param mailboxProvider 
+     * Creates a mailbox session with the designated provider. By default,
+     * DeveloperMail API will be used.
+     * @param mailboxProvider
      */
     constructor(mailboxProvider: MailboxProvider = 'DEVELOPER') {
         this.mailbox = this.mailboxProviders[mailboxProvider];
     }
 
     /**
-     * Initialize a session and set the client with an email address. 
-     * If one email service is not working, the backup will be used 
+     * Initialize a session and set the client with an email address.
+     * If one email service is not working, the backup will be used
      * automatically to prevent disruption.
      * @returns email address
      */
@@ -50,52 +50,48 @@ export default class IntegrationMailbox {
      * Get the current list of emails from the email inbox.
      * @returns Array of emails
      */
-    async fetchEmailList(): Promise<EmailResponse[]> {
+    fetchEmailList(): Promise<EmailResponse[]> {
         if (!this.mailbox) { throw Error(noMailboxError); }
-        const emailList: EmailResponse[] = await this.mailbox.fetchEmailList();
-        return emailList;
+        return this.mailbox.fetchEmailList();
     }
 
     /**
-     * Forget the current email address. This will delete the mailbox and any emails 
+     * Forget the current email address. This will delete the mailbox and any emails
      * it contains.
-     * @param emailAddress 
+     * @param emailAddress
      * @returns True on success, false on failure
      */
-    async forgetEmailAddress(emailAddress: string): Promise<boolean | undefined> {
+    forgetEmailAddress(emailAddress: string): Promise<boolean | undefined> {
         if (!this.mailbox) { throw Error(noMailboxError); }
-        const isAddressDeleted = await this.mailbox.forgetEmailAddress(emailAddress);
-        return isAddressDeleted;
+        return this.mailbox.forgetEmailAddress(emailAddress);
     }
 
     /**
      * Delete a specific email by ID.
-     * @param emailId 
+     * @param emailId
      * @returns true on success, false on failure
      */
-    async deleteEmailById(emailId: string): Promise<boolean | undefined> {
+    deleteEmailById(emailId: string): Promise<boolean | undefined> {
         if (!this.mailbox) { throw Error(noMailboxError); }
-        const isEmailDeleted = await this.mailbox.deleteEmailById(emailId);
-        return isEmailDeleted;
+        return this.mailbox.deleteEmailById(emailId);
     }
 
     /**
-     * Get the contents of an email. All HTML in the body of the email is filtered. 
+     * Get the contents of an email. All HTML in the body of the email is filtered.
      * Eg, Javascript, applets, iframes, etc is removed. Subject and email excerpt are escaped using HTML Entities.
      * Only emails owned by the current session id can be fetched.
-     * @param emailId 
-     * @returns 
+     * @param emailId
+     * @returns
      */
-    async fetchEmailById(emailId: string): Promise<EmailResponse | undefined> {
+    fetchEmailById(emailId: string): Promise<EmailResponse | undefined> {
         if (!this.mailbox) { throw Error(noMailboxError); }
-        const email = this.mailbox.fetchEmailById(emailId);
-        return email;
+        return this.mailbox.fetchEmailById(emailId);
     }
 
     /**
      * Wait for email to arrive in inbox, and return the fetched email
      * @param subjectLine - the subject line belonging to the email.
-     * @param maxLimit - the max time to wait for the email to arrive, default is 1 minute.
+     * @param maxLimitInSec - the max time to wait for the email to arrive, default is 60 seconds.
      * @returns EmailResponse | undefined
      */
     async waitForEmail(subjectLine: string, maxLimitInSec = 60): Promise<EmailResponse | undefined> {
@@ -132,7 +128,7 @@ export default class IntegrationMailbox {
     /**
      * Extract all urls from <a> hrefs from an email body. This will be returned
      * as an array of strings containing the urls.
-     * @param email 
+     * @param email
      * @returns all hrefs from an email body
      */
     extractLinksFromEmail(email: EmailResponse): string[] {

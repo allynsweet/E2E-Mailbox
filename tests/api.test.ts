@@ -36,12 +36,12 @@ test('should wait for email', async () => {
     expect(emailResponse.mail_subject).toEqual(emailList[0].mail_subject);
 });
 
-test('should pull urls from email body', async () => {
+test('should pull urls from email body', () => {
     expect.assertions(2);
     const email: EmailResponse = { ...emailList[0] };
     const website = 'https://example.com';
     email.mail_body += `<a href="${website}" />`
-    const urls = await mailbox.extractLinksFromEmail(email);
+    const urls = mailbox.extractLinksFromEmail(email);
     expect(urls.length).toEqual(1);
     expect(urls[0]).toEqual(website);
 });

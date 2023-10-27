@@ -1,6 +1,6 @@
 {
   "name": "e2e-mailbox",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "E2E test your email notification system using GuerrillaMail API.",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",

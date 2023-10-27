@@ -7,7 +7,7 @@ const subjectLine = 'Welcome!';
 let emailList: EmailResponse[] = [];
 
 test('should generate an email for DeveloperMail properly', async () => {
-    expect.assertions(3);
+    expect.assertions(2);
     dmEmailAddress = await dmMailbox.createEmailAddress();
     expect(dmEmailAddress).toBeDefined();
     if (!dmEmailAddress) { return; }
@@ -24,7 +24,6 @@ test('email should arrive in inbox', async () => {
     expect.assertions(2);
     await new Promise(r => setTimeout(r, 30000));
     emailList = await dmMailbox.fetchEmailList();
-    console.log(emailList);
     expect(emailList.length).toEqual(1);
     if (emailList.length === 0) { return; }
     expect(emailList[0].mail_subject.includes(subjectLine)).toBeTruthy();

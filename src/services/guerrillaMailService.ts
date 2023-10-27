@@ -1,4 +1,4 @@
-import axios, { AxiosResponse } from 'axios';
+import axios, {AxiosError, AxiosResponse} from 'axios';
 import { CreateEmailResponse, EmailListResponse, EmailResponse, MailboxProvider, SetEmailResponse } from '../types';
 import MailboxService from './mailboxService';
 
@@ -21,13 +21,15 @@ class GuerrillaMailService extends MailboxService {
                 ...payload, sid_token: this.sidToken, ip: '127.0.0.1', agent: 'Mozilla_foo_bar',
             };
             return axios.get(this.API_URL, { params });
-        } catch (error) {
-            if (!error.data) { return; }
-            // Automatically retry 3 times if it's a 502 error
-            if (error.data.includes('502 Bad Gateway') && isRetry < 3) {
-                // Wait 3 seconds before retrying if there's a 502 error.
-                await this.sleep(3000);
-                return this.sendRequest(payload, isRetry + 1);
+        } catch (error: AxiosError | unknown) {
+            if (axios.isAxiosError(error)) {
+                if (!error.response?.data) { return; }
+                // Automatically retry 3 times if it's a 502 error
+                if (error.response?.data.includes('502 Bad Gateway') && isRetry < 3) {
+                    // Wait 3 seconds before retrying if there's a 502 error.
+                    await this.sleep(3000);
+                    return this.sendRequest(payload, isRetry + 1);
+                }
             }
         }
     }

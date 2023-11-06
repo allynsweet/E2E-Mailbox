@@ -8,7 +8,7 @@ E2E test your email notification system using [DeveloperMail API](https://www.de
 
 A fully-typed and tested JS library for adding email notification testing to your E2E tests. Some use-cases include:
 
-- Registering for site and checking for the welcome email
+- Registering for a site and checking for the welcome email
 - Registering for a site and confirming your email address by pulling the URL from the email body
 - Fetching a reset password pin from an email
 - Ensuring your system sends the correct email after an action is committed on your website
@@ -84,7 +84,7 @@ const isEmailDeleted = await mailbox.deleteEmailById(email.mail_id);
 The first test in the suite should generate a new email to be used by later tests.
 
 ```js
-const mailbox = new IntegrationMailbox();
+const mailbox = new E2EMailbox();
 let emailAddress = '';
 test('should generate an email properly', async () => {
   emailAddress = await mailbox.createEmailAddress();

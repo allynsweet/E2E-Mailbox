@@ -13,7 +13,7 @@ interface MessageIdsResponse {
 }
 
 interface GetMessagesResponse {
-    result: { key: string, value: string }[];
+    result?: { key: string, value: string }[];
 }
 
 interface SendMessagePayload {
@@ -109,11 +109,11 @@ class DeveloperMailService extends MailboxService {
             emailListResponse.result, 'POST', `/mailbox/${this.mailboxName}/messages`
         );
         if (!getMessagesResponse) { return emailList; }
-        const messages: GetMessagesResponse = getMessagesResponse.data;
+        const { result = [] }: GetMessagesResponse = getMessagesResponse.data;
 
         // Response value comes as Mime 1.0, we must parse this to conform with our
         // read model.
-        for (const message of messages.result) {
+        for (const message of result) {
             const email = await DeveloperMailService.convertMimeToEmailResponse(message.value, message.key);
             emailList.push(email);
         }

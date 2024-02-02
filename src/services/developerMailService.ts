@@ -4,22 +4,46 @@ import MailboxService from './mailboxService';
 import { ParsedMail, simpleParser } from 'mailparser';
 
 interface CreateEmailResponse {
-    name: string;
-    token: string;
+    result: {
+        name: string;
+        token: string;
+    }
+}
+
+interface ForgetEmailResponse {
+    result: boolean
 }
 
 interface MessageIdsResponse {
     result: string[];
 }
 
+interface DeleteEmailResponse {
+    result: boolean
+}
+
 interface GetMessagesResponse {
-    result?: { key: string, value: string }[];
+    result: { key: string, value: string }[] | null;
+}
+
+interface SendSelfEmailResponse {
+    result: boolean;
+}
+
+interface FetchEmailByIdResponse {
+    result: string;
 }
 
 interface SendMessagePayload {
     subject: string;
     body: string;
     isHtml: boolean;
+}
+
+interface Mailbox {
+    token: string;
+    name: string;
+    email: string;
 }
 
 class DeveloperMailService extends MailboxService {
@@ -36,7 +60,7 @@ class DeveloperMailService extends MailboxService {
      * @param endpoint
      * @returns AxiosResponse on success, undefined on failure.
      */
-    private async sendRequest(data: any, method: Method, endpoint: string): Promise<AxiosResponse | undefined> {
+    private async sendRequest<T>(data: any, method: Method, endpoint: string): Promise<AxiosResponse<T> | undefined> {
         try {
             // Set Authentication header for DeveloperMail
             const headers = !!this.token ? {
@@ -44,7 +68,7 @@ class DeveloperMailService extends MailboxService {
                 'Content-Type': 'application/json'
             } : {};
             const payloadType = method === 'GET' ? 'params' : 'data';
-            return axios(`${this.API_URL}${endpoint}`, {
+            return axios<T>(`${this.API_URL}${endpoint}`, {
                 [payloadType]: data, method, headers
             });
         } catch (error) {
@@ -83,14 +107,14 @@ class DeveloperMailService extends MailboxService {
      * address randomly.
      * @returns email address
      */
-    async createEmailAddress(): Promise<string | undefined> {
-        const response = await this.sendRequest({}, 'PUT', '/mailbox');
-        if (!response) { return; }
-        const creationResponse: CreateEmailResponse = response.data.result;
+    async createEmailAddress(): Promise<string> {
+        const response = await this.sendRequest<CreateEmailResponse>({}, 'PUT', '/mailbox');
+        if (!response) throw new Error("Could not create email address")
+        const creationResponse = response.data;
         const EMAIL_DOMAIN = 'developermail.com';
-        this.token = creationResponse.token;
-        this.mailboxName = creationResponse.name;
-        return `${creationResponse.name}@${EMAIL_DOMAIN}`;
+        this.token = creationResponse.result.token;
+        this.mailboxName = creationResponse.result.name;
+        return `${creationResponse.result.name}@${EMAIL_DOMAIN}`;
     }
 
     /**
@@ -100,16 +124,18 @@ class DeveloperMailService extends MailboxService {
     async fetchEmailList(): Promise<EmailResponse[]> {
         const emailList: EmailResponse[] = [];
         // Fetch list of message IDs present in the mailbox
-        const getMessageIdsResponse = await this.sendRequest({}, 'GET', `/mailbox/${this.mailboxName}`);
+        const getMessageIdsResponse = await this.sendRequest<MessageIdsResponse>({}, 'GET', `/mailbox/${this.mailboxName}`);
         if (!getMessageIdsResponse) { return emailList; }
-        const emailListResponse: MessageIdsResponse = getMessageIdsResponse.data;
+        const emailListResponse = getMessageIdsResponse.data;
 
         // Fetch list of messages from the IDs gathered in getMessageIdsResponse
-        const getMessagesResponse = await this.sendRequest(
+        const getMessagesResponse = await this.sendRequest<GetMessagesResponse>(
             emailListResponse.result, 'POST', `/mailbox/${this.mailboxName}/messages`
         );
         if (!getMessagesResponse) { return emailList; }
-        const { result = [] }: GetMessagesResponse = getMessagesResponse.data;
+        const { result } = getMessagesResponse.data;
+
+        if(!result) return emailList;
 
         // Response value comes as Mime 1.0, we must parse this to conform with our
         // read model.
@@ -129,7 +155,7 @@ class DeveloperMailService extends MailboxService {
      * @returns True on success, false on failure
      */
     async forgetEmailAddress(): Promise<boolean | undefined> {
-        const response = await this.sendRequest({}, 'DELETE', `/mailbox/${this.mailboxName}`);
+        const response = await this.sendRequest<ForgetEmailResponse>({}, 'DELETE', `/mailbox/${this.mailboxName}`);
         return !!response?.data?.result;
     }
 
@@ -138,11 +164,11 @@ class DeveloperMailService extends MailboxService {
      * @param emailId
      * @returns true on success, false on failure
      */
-    async deleteEmailById(emailId: string): Promise<boolean | undefined> {
-        const response = await this.sendRequest(
+    async deleteEmailById(emailId: string): Promise<boolean> {
+        const response = await this.sendRequest<DeleteEmailResponse>(
             {}, 'DELETE', `/mailbox/${this.mailboxName}/messages/${emailId}`
         );
-        return !!response?.data?.result;
+        return !!response?.data?.result ?? false;
     }
 
     /**
@@ -152,18 +178,18 @@ class DeveloperMailService extends MailboxService {
      * @param emailId
      * @returns
      */
-    async fetchEmailById(emailId: string): Promise<EmailResponse | undefined> {
-        const response = await this.sendRequest(
+    async fetchEmailById(emailId: string): Promise<EmailResponse> {
+        const response = await this.sendRequest<FetchEmailByIdResponse>(
             {}, 'GET', `/mailbox/${this.mailboxName}/messages/${emailId}`
         );
-        if (!response) { return; }
+        if (!response) throw new Error("Could not find email with id: " + emailId);
         const responseData: string = response.data.result;
         return DeveloperMailService.convertMimeToEmailResponse(responseData, emailId);
     }
 
     async sendSelfMail(subject: string, body: string): Promise<boolean> {
         const payload: SendMessagePayload = { subject, body, isHtml: true };
-        const response = await this.sendRequest(
+        const response = await this.sendRequest<SendSelfEmailResponse>(
             payload, 'PUT', `/mailbox/${this.mailboxName}/messages`
         );
         return !!response?.data?.result;

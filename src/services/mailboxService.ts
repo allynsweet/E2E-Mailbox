@@ -14,7 +14,7 @@ abstract class MailboxService {
      * Initialize a session and set the client with an email address.
      * @returns email address
      */
-    abstract createEmailAddress(): Promise<string | undefined>;
+    abstract createEmailAddress(): Promise<string>;
 
 
     /**
@@ -46,6 +46,14 @@ abstract class MailboxService {
      * @returns 
      */
     abstract fetchEmailById(emailId: string): Promise<EmailResponse | undefined>;
+
+    /**
+     * Send an email to this mailbox. Only works for the DeveloperMail provider.
+     * @param subject
+     * @param body 
+     * @returns A `boolean` representing success or failure.
+     */
+    abstract sendSelfMail(subject: string, body: string): Promise<boolean>
 
 }
 

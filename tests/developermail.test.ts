@@ -1,4 +1,3 @@
-import DeveloperMailService from '../src/services/developerMailService';
 import IntegrationMailbox from '../src/index';
 import { EmailResponse } from '../src/types';
 
@@ -27,21 +26,21 @@ describe("when using DeveloperMail", () => {
         emailList = await mailbox.fetchEmailList();
         expect(emailList.length).toEqual(1);
         expect(emailList[0].mail_subject.includes(subjectLine)).toBeTruthy();
-    }); 
-    
+    });
+
     it('should delete email by ID', async () => {
         const isEmailDeleted = await mailbox.deleteEmailById(emailList[0].mail_id);
         expect(isEmailDeleted).toBeTruthy();
         const secondEmailList = await mailbox.fetchEmailList();
         expect(secondEmailList.length).toEqual(0);
     });
-    
+
     it('should wait for an email to arrive', async () => {
-        const subjectLine = "Awaiting";
+        const selfSubjectLine = "Awaiting";
 
         await mailbox.sendSelfMail(subjectLine, 'Testing email body.');
-        const foundEmail = await mailbox.waitForEmail(subjectLine);
-        
+        const foundEmail = await mailbox.waitForEmail(selfSubjectLine);
+
         expect(foundEmail).toBeDefined();
     });
 

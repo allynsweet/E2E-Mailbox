@@ -3,6 +3,7 @@ import { CreateEmailResponse, EmailListResponse, EmailResponse, MailboxProvider,
 import MailboxService from './mailboxService';
 
 class GuerrillaMailService extends MailboxService {
+    
     API_URL = 'http://api.guerrillamail.com/ajax.php';
     PROVIDER: MailboxProvider = 'GUERRILLA';
     private sidToken = '';
@@ -42,10 +43,10 @@ class GuerrillaMailService extends MailboxService {
      * address randomly.
      * @returns email address
      */
-    async createEmailAddress(): Promise<string | undefined> {
+    async createEmailAddress(): Promise<string> {
         const payload = { f: 'get_email_address' };
         const response = await this.sendRequest(payload);
-        if (!response) { return; }
+        if (!response) throw new Error("Could not create email address")
         const creationResponse: CreateEmailResponse = response.data;
         this.sidToken = creationResponse.sid_token;
         return creationResponse.email_addr;
@@ -123,6 +124,10 @@ class GuerrillaMailService extends MailboxService {
         const response = await this.sendRequest(payload);
         if (!response) { return; }
         return response.data;
+    }
+
+    sendSelfMail(subject: string, body: string): Promise<boolean> {
+        throw new Error('Method not implemented for the GuerrilaMail provider.');
     }
 }
 

@@ -3,8 +3,6 @@ import GuerrillaMailService from './services/guerrillaMailService';
 import MailboxService from './services/mailboxService';
 import { EmailResponse, MailboxProvider } from './types';
 
-const noMailboxError = 'There is currently no mailbox set. Did you forget to call `createEmailAddress` first?';
-
 export default class IntegrationMailbox {
 
     private mailboxProviders: Record<MailboxProvider, MailboxService> = {
@@ -12,7 +10,7 @@ export default class IntegrationMailbox {
         'DEVELOPER': new DeveloperMailService()
     }
 
-    private mailbox: MailboxService | undefined;
+    private mailbox: MailboxService;
 
     /** --- Public Functions --- */
 
@@ -31,8 +29,7 @@ export default class IntegrationMailbox {
      * automatically to prevent disruption.
      * @returns email address
      */
-    async createEmailAddress(): Promise<string | undefined> {
-        if (!this.mailbox) { throw Error(noMailboxError); }
+    async createEmailAddress(): Promise<string> {
         let email = await this.mailbox.createEmailAddress();
         // If service cannot create an address, use the opposite provider.
         if (!email) {
@@ -47,11 +44,20 @@ export default class IntegrationMailbox {
     }
 
     /**
+     * Send an email to this mailbox. Only works for the DeveloperMail provider.
+     * @param subject
+     * @param body
+     * @returns A `boolean` representing success or failure.
+     */
+    async sendSelfMail(subject: string, body: string): Promise<boolean> {
+        return this.mailbox.sendSelfMail(subject, body);
+    }
+
+    /**
      * Get the current list of emails from the email inbox.
      * @returns Array of emails
      */
     fetchEmailList(): Promise<EmailResponse[]> {
-        if (!this.mailbox) { throw Error(noMailboxError); }
         return this.mailbox.fetchEmailList();
     }
 
@@ -62,7 +68,6 @@ export default class IntegrationMailbox {
      * @returns True on success, false on failure
      */
     forgetEmailAddress(emailAddress: string): Promise<boolean | undefined> {
-        if (!this.mailbox) { throw Error(noMailboxError); }
         return this.mailbox.forgetEmailAddress(emailAddress);
     }
 
@@ -72,7 +77,6 @@ export default class IntegrationMailbox {
      * @returns true on success, false on failure
      */
     deleteEmailById(emailId: string): Promise<boolean | undefined> {
-        if (!this.mailbox) { throw Error(noMailboxError); }
         return this.mailbox.deleteEmailById(emailId);
     }
 
@@ -84,7 +88,6 @@ export default class IntegrationMailbox {
      * @returns
      */
     fetchEmailById(emailId: string): Promise<EmailResponse | undefined> {
-        if (!this.mailbox) { throw Error(noMailboxError); }
         return this.mailbox.fetchEmailById(emailId);
     }
 
@@ -95,7 +98,6 @@ export default class IntegrationMailbox {
      * @returns EmailResponse | undefined
      */
     async waitForEmail(subjectLine: string, maxLimitInSec = 60): Promise<EmailResponse | undefined> {
-        if (!this.mailbox) { throw Error(noMailboxError); }
         let hasEmailArrived = false;
         let elapsedTime = 0;
         let foundEmail: EmailResponse | undefined;
@@ -104,7 +106,9 @@ export default class IntegrationMailbox {
         // Check email every 5 seconds until the email is found
         // or the maxLimit is reached.
         while (elapsedTime < maxLimitInMs && !hasEmailArrived) {
-            const emails = await this.fetchEmailList();
+            let emails: EmailResponse[] = [];
+            try { emails = await this.fetchEmailList(); } catch(e) { throw new Error(`Failed fetching email list: ${e}`); }
+
             // eslint-disable-next-line no-loop-func
             emails.forEach((email) => {
                 if (email.mail_subject.includes(subjectLine)) {

@@ -38,7 +38,7 @@ describe("when using DeveloperMail", () => {
     it('should wait for an email to arrive', async () => {
         const selfSubjectLine = "Awaiting";
 
-        await mailbox.sendSelfMail(subjectLine, 'Testing email body.');
+        await mailbox.sendSelfMail(selfSubjectLine, 'Testing email body.');
         const foundEmail = await mailbox.waitForEmail(selfSubjectLine);
 
         expect(foundEmail).toBeDefined();

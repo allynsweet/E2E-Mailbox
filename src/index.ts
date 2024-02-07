@@ -48,7 +48,7 @@ export default class IntegrationMailbox {
     /**
      * Send an email to this mailbox. Only works for the DeveloperMail provider.
      * @param subject
-     * @param body 
+     * @param body
      * @returns A `boolean` representing success or failure.
      */
     async sendSelfMail(subject: string, body: string): Promise<boolean> {
@@ -109,8 +109,8 @@ export default class IntegrationMailbox {
         // or the maxLimit is reached.
         while (elapsedTime < maxLimitInMs && !hasEmailArrived) {
             let emails: EmailResponse[] = [];
-            try { emails = await this.fetchEmailList(); } catch(e) {}
-            
+            try { emails = await this.fetchEmailList(); } catch(e) { throw new Error(`Failed fetching email list: ${e}`); }
+
             // eslint-disable-next-line no-loop-func
             emails.forEach((email) => {
                 if (email.mail_subject.includes(subjectLine)) {

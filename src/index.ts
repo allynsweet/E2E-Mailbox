@@ -3,8 +3,6 @@ import GuerrillaMailService from './services/guerrillaMailService';
 import MailboxService from './services/mailboxService';
 import { EmailResponse, MailboxProvider } from './types';
 
-const noMailboxError = 'There is currently no mailbox set. Did you forget to call `createEmailAddress` first?';
-
 export default class IntegrationMailbox {
 
     private mailboxProviders: Record<MailboxProvider, MailboxService> = {

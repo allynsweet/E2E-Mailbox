@@ -109,8 +109,11 @@ class DeveloperMailService extends MailboxService {
      */
     async createEmailAddress(): Promise<string> {
         const response = await this.sendRequest<CreateEmailResponse>({}, 'PUT', '/mailbox');
-        if (!response) throw new Error("Could not create email address")
+        if (!response) throw new Error("Could not create email address.")
         const creationResponse = response.data;
+
+        // Ensure the DeveloperMail response is valid.
+        if (!creationResponse?.result) throw new Error("Could not create email address.")
         const EMAIL_DOMAIN = 'developermail.com';
         this.token = creationResponse.result.token;
         this.mailboxName = creationResponse.result.name;

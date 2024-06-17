@@ -3,7 +3,7 @@ import { CreateEmailResponse, EmailListResponse, EmailResponse, MailboxProvider,
 import MailboxService from './mailboxService';
 
 class GuerrillaMailService extends MailboxService {
-    
+
     API_URL = 'http://api.guerrillamail.com/ajax.php';
     PROVIDER: MailboxProvider = 'GUERRILLA';
     private sidToken = '';
@@ -46,8 +46,9 @@ class GuerrillaMailService extends MailboxService {
     async createEmailAddress(): Promise<string> {
         const payload = { f: 'get_email_address' };
         const response = await this.sendRequest(payload);
-        if (!response) throw new Error("Could not create email address")
+        if (!response) throw new Error("Could not create email address");
         const creationResponse: CreateEmailResponse = response.data;
+        if (!creationResponse?.email_addr) throw new Error("Could not create email address");
         this.sidToken = creationResponse.sid_token;
         return creationResponse.email_addr;
     }

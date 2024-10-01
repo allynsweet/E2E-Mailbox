@@ -6,7 +6,7 @@ E2E test your email notification system using [DeveloperMail API](https://www.de
 
 ## Description
 
-A fully-typed and tested JS library for adding email notification testing to your E2E tests. Some use-cases include:
+A fully-typed and tested TS library for adding email notification testing to your E2E tests. Some use-cases include:
 
 - Registering for a site and checking for the welcome email
 - Registering for a site and confirming your email address by pulling the URL from the email body

@@ -2,8 +2,13 @@
   "name": "e2e-mailbox",
   "version": "1.1.5",
   "description": "E2E test your email notification system using GuerrillaMail API.",
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "main": "dist/lib/index.js",
+  "module": "dist/esm/index.js",
+  "exports": {
+    "import": "./dist/esm/index.js",
+    "require": "./dist/lib/index.js"
+  },
+  "types": "dist/lib/index.d.ts",
   "author": "Allyn Sweet",
   "license": "MIT",
   "repository": {
@@ -11,7 +16,7 @@
     "url": "https://github.com/allynsweet/E2E-Mailbox.git"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && tsc --project tsconfig.esm.json",
     "format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\"",
     "lint": "tslint -p tsconfig.json",
     "test": "jest --config jestconfig.json",
@@ -28,7 +33,11 @@
     "typescript": "^4.3.4"
   },
   "dependencies": {
-    "axios": "^1.6.0",
+    "axios": "1.7.4",
     "mailparser": "^3.6.5"
-  }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ]
 }

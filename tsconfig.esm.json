@@ -5,6 +5,8 @@
     "moduleResolution": "node",
     "outDir": "dist/esm",
     "declaration": true,
-    "declarationDir": "dist/esm"
+    "declarationDir": "dist/esm",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true
   }
 }

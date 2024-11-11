@@ -24,6 +24,7 @@
   },
   "scripts": {
     "build": "tsc && tsc --project tsconfig.esm.json",
+    "postbuild": "find dist/esm -name '*.js' -exec bash -c 'mv \"$0\" \"${0%.js}.mjs\"' {} \\;",
     "format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\"",
     "lint": "tslint -p tsconfig.json",
     "test": "jest --config jestconfig.json",

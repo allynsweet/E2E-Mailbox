@@ -1,6 +1,6 @@
 import axios, {AxiosError, AxiosResponse} from 'axios';
-import { CreateEmailResponse, EmailListResponse, EmailResponse, MailboxProvider, SetEmailResponse } from '../types';
-import MailboxService from './mailboxService';
+import { CreateEmailResponse, EmailListResponse, EmailResponse, MailboxProvider, SetEmailResponse } from '../types.js';
+import MailboxService from './mailboxService.js';
 
 class GuerrillaMailService extends MailboxService {
 

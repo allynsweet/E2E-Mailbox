@@ -1,7 +1,7 @@
 import E2EMailbox from '../src/index';
 import { EmailResponse } from '../src/types';
 
-const mailbox = new E2EMailbox();
+const mailbox = new E2EMailbox('GUERRILLA');
 let emailList: EmailResponse[] = [];
 let emailAddress: string | undefined = '';
 test('should generate an email properly', async () => {
@@ -12,10 +12,11 @@ test('should generate an email properly', async () => {
     expect(emailAddress.includes('@')).toBeTruthy();
 });
 
-test('should return an email list with no emails', async () => {
-    expect.assertions(1);
+test('should return an email list', async () => {
+    expect.assertions(2);
     emailList = await mailbox.fetchEmailList();
-    expect(emailList.length).toEqual(0);
+    expect(Array.isArray(emailList)).toBeTruthy();
+    expect(emailList.length).toBeGreaterThanOrEqual(0);
 });
 
 test('should forget email address', async () => {

@@ -1,7 +1,7 @@
-import DeveloperMailService from './services/developerMailService';
-import GuerrillaMailService from './services/guerrillaMailService';
-import MailboxService from './services/mailboxService';
-import { EmailResponse, MailboxProvider } from './types';
+import DeveloperMailService from './services/developerMailService.js';
+import GuerrillaMailService from './services/guerrillaMailService.js';
+import MailboxService from './services/mailboxService.js';
+import { EmailResponse, MailboxProvider } from './types.js';
 
 export default class IntegrationMailbox {
 
@@ -15,11 +15,11 @@ export default class IntegrationMailbox {
     /** --- Public Functions --- */
 
     /**
-     * Creates a mailbox session with the designated provider. By default,
-     * DeveloperMail API will be used.
+     * Creates a mailbox session with the designated provider. GuerrillaMail is
+     * the default because DeveloperMail is deprecated and may be unreachable.
      * @param mailboxProvider
      */
-    constructor(mailboxProvider: MailboxProvider = 'DEVELOPER') {
+    constructor(mailboxProvider: MailboxProvider = 'GUERRILLA') {
         this.mailbox = this.mailboxProviders[mailboxProvider];
     }
 
@@ -31,7 +31,7 @@ export default class IntegrationMailbox {
      */
     async createEmailAddress(): Promise<string> {
       try {
-        return this.mailbox.createEmailAddress();
+        return await this.mailbox.createEmailAddress();
       } catch {
         const newMailbox: MailboxProvider = this.mailbox.PROVIDER === 'DEVELOPER'
           ? 'GUERRILLA'
@@ -148,3 +148,5 @@ export default class IntegrationMailbox {
         return extractedUrls;
     }
 }
+
+export { IntegrationMailbox };

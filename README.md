@@ -1,124 +1,127 @@
-![example workflow](https://github.com/allynsweet/E2E-Mailbox/actions/workflows/node.js.yml/badge.svg)
-
 # E2E Mailbox
 
-E2E test your email notification system using [DeveloperMail API](https://www.developermail.com/) and [GuerrillaMail API](https://www.guerrillamail.com/).
+[![Contributors](https://img.shields.io/github/contributors/allynsweet/E2E-Mailbox.svg)](https://github.com/allynsweet/E2E-Mailbox/graphs/contributors)
 
-## Description
+NPM: [![npm](https://img.shields.io/npm/v/e2e-mailbox.svg)](https://www.npmjs.com/package/e2e-mailbox) [![npm downloads (monthly)](https://img.shields.io/npm/dm/e2e-mailbox.svg?label=downloads%20%28monthly%29)](https://www.npmjs.com/package/e2e-mailbox) [![npm downloads (all time)](https://img.shields.io/npm/dt/e2e-mailbox.svg?label=downloads%20%28all%20time%29)](https://www.npmjs.com/package/e2e-mailbox) [![Node version](https://img.shields.io/node/v/e2e-mailbox.svg)](https://www.npmjs.com/package/e2e-mailbox)
 
-A fully-typed and tested TS library for adding email notification testing to your E2E tests. Some use-cases include:
+CI: [![example workflow](https://github.com/allynsweet/E2E-Mailbox/actions/workflows/node.js.yml/badge.svg)](https://github.com/allynsweet/E2E-Mailbox/actions/workflows/node.js.yml) [![License](https://img.shields.io/npm/l/e2e-mailbox.svg)](https://opensource.org/licenses/MIT)
 
-- Registering for a site and checking for the welcome email
-- Registering for a site and confirming your email address by pulling the URL from the email body
-- Fetching a reset password pin from an email
-- Ensuring your system sends the correct email after an action is committed on your website
+E2E Mailbox is a fully-typed TypeScript library for checking email that your
+system sends during integration and end-to-end tests.
 
-Configurable to use either DeveloperMail or GuerrillaMail as the temporary mailbox providers. These are free services generously provided to create short-lived email addresses. If one provider is not working, the other will be used automatically to prevent disruption.
+Use it to verify a welcome email, extract a confirmation URL, read a reset
+password code, or assert that the correct notification was produced after an
+application action.
 
-## Usage
+## Provider status
 
-### Installation
+- **GuerrillaMail** is the default provider as of 1.2.
+- **DeveloperMail** is deprecated and retained only for compatibility. Its
+  public service has become unreliable, so explicit `'DEVELOPER'` sessions may
+  fall back to GuerrillaMail when mailbox creation fails.
+- GuerrillaMail does not implement `sendSelfMail`. If you rely on sending a
+  message directly through the mailbox API, use an application SMTP inbox in
+  your test instead.
 
-Install the **E2E Mailbox** package with [NPM](https://www.npmjs.com/package/e2e-mailbox) or yarn:
+## Installation
 
-```sh
-npm install e2e-mailbox
-yarn add e2e-mailbox
+```console
+$ npm install e2e-mailbox
 ```
 
-### Setup
+or:
 
-#### Creating an Email Address
+```console
+$ yarn add e2e-mailbox
+```
+
+The package ships dual CommonJS and ESM entry points with TypeScript
+declarations. Node 18 or newer is recommended.
+
+## Quick start
 
 ```js
 import E2EMailbox from 'e2e-mailbox';
-// This will create a new mailbox using DeveloperMail API as the provider.
-// To set GuerrillaMail, pass 'GUERRILLA' to the constructor.
+
 const mailbox = new E2EMailbox();
-// This will generate a new email address for you to use in your tests
 const emailAddress = await mailbox.createEmailAddress();
+
+// Register the user or trigger your application's email flow here.
+const email = await mailbox.waitForEmail('Confirm your email', 60);
+
+if (email) {
+  const [confirmUrl] = mailbox
+    .extractLinksFromEmail(email)
+    .filter((url) => url.includes('https://example.com/confirm'));
+}
 ```
 
-#### Wait for Email by Subject Line
-
-After an email has been sent to the email address, you could poll for the email's subject line explicitly:
+Pass `'GUERRILLA'` explicitly when you want to make the provider obvious:
 
 ```js
-// Set the subject line along with the max timeout in seconds, default is 60 seconds.
-const email = await mailbox.waitForEmail('The Subject Line in your Email', 60);
+import E2EMailbox from 'e2e-mailbox';
 
-// or you could use the promise chains if you fancy
-mailbox.waitForEmail('The Subject Line in your Email').then((email) => {
-  if (!email) {
-    return;
-  }
-  // email is found and safe to use now.
-});
+const mailbox = new E2EMailbox('GUERRILLA');
 ```
 
-#### Fetch All Emails in Mailbox
+## API
 
-```js
-// Returns an array of email responses
-const emailList = await mailbox.fetchEmailList();
-```
+| Method | Description |
+| --- | --- |
+| `createEmailAddress()` | Create a mailbox, falling back to the other provider if the requested provider is unavailable. |
+| `waitForEmail(subjectLine, maxLimitInSeconds = 60)` | Poll until an email whose subject contains `subjectLine` arrives, then fetch its full body. |
+| `fetchEmailList()` | Return the messages currently visible in the mailbox. |
+| `fetchEmailById(emailId)` | Return one parsed email. |
+| `deleteEmailById(emailId)` | Delete one email. |
+| `forgetEmailAddress(emailAddress)` | Delete the mailbox and its messages. |
+| `sendSelfMail(subject, body)` | Send directly through DeveloperMail. Deprecated, and unavailable with GuerrillaMail. |
+| `extractLinksFromEmail(email)` | Extract `href` URLs from the email body. |
 
-#### Fetch Email by ID
-
-Each email has an `email_id` associated with it, this ID could be used to fetch all attachments and body of an email.
-
-```js
-const fullEmail = await mailbox.fetchEmailById(emailID);
-```
-
-#### Delete Email by ID
-
-```js
-const isEmailDeleted = await mailbox.deleteEmailById(email.mail_id);
-```
-
-### Example Usage in Tests
-
-#### Checking if email was generated
-
-The first test in the suite should generate a new email to be used by later tests.
+## Example test
 
 ```js
 const mailbox = new E2EMailbox();
-let emailAddress = '';
-test('should generate an email properly', async () => {
+let emailAddress;
+
+test('creates a mailbox', async () => {
   emailAddress = await mailbox.createEmailAddress();
-  expect(emailAddress).toBeDefined();
+  expect(emailAddress).toContain('@');
 });
-```
 
-#### Checking if email was sent
+test('receives the welcome email', async () => {
+  // Complete registration before waiting for the notification.
+  const email = await mailbox.waitForEmail('Welcome', 100);
 
-After registering for your service during the integration test, we should test to make sure the email was sent out in a timely manner.
-
-```js
-it('should send a confirm account email', async () => {
-  // 'Confirm Your Email' is the subject line of the email in this case
-  const foundEmail = await mailbox.waitForEmail('Confirm Your Email', 100);
-  expect(!!foundEmail).toBeTruthy();
+  expect(email).toBeDefined();
+  expect(email.mail_subject).toContain('Welcome');
 });
-```
 
-Next, if you have a confirmation link in the email, you could pull it from the email body:
+test('extracts the confirmation link', async () => {
+  const urls = mailbox.extractLinksFromEmail(email);
+  const confirmUrl = urls.find((url) => url.startsWith('https://example.com/confirm'));
 
-```js
-it('should confirm account and go to login page', async () => {
-  expect(foundEmail).toBeDefined();
-  if (!foundEmail) {
-    return;
-  }
-  const urls = mailbox.extractLinksFromEmail(foundEmail);
-  const [confirmUrl] = urls.filter((url) => url.includes('https://example.com/your_confirm_url'));
   expect(confirmUrl).toBeDefined();
-  if (!confirmUrl) return;
-  // navigate to your confirmUrl in your test
 });
 ```
+
+## Temporary providers
+
+GuerrillaMail and DeveloperMail are free public services intended for
+short-lived mailboxes. They are not designed for confidential data, long-term
+storage, guaranteed delivery, or production load testing. Create a fresh
+mailbox per test and forget it when the test finishes.
+
+## Development
+
+```console
+$ yarn install
+$ yarn build
+$ yarn test
+```
+
+The unit suite covers provider selection, fallback, MIME parsing, and both
+package entry points. The small live-provider smoke test can be affected by
+temporary upstream availability.
 
 ## License
 

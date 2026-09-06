@@ -1,7 +1,7 @@
 import axios, { AxiosResponse, Method } from 'axios';
-import { EmailResponse, MailboxProvider } from '../types';
-import MailboxService from './mailboxService';
-import { ParsedMail, simpleParser } from 'mailparser';
+import { EmailResponse, MailboxProvider } from '../types.js';
+import MailboxService from './mailboxService.js';
+import { parseMimeMessage } from './mimeParser.js';
 
 interface CreateEmailResponse {
     result: {
@@ -82,21 +82,18 @@ class DeveloperMailService extends MailboxService {
      * @param mailId
      * @returns generated EmailResponse
      */
-    private static async convertMimeToEmailResponse(message: string, mailId: string): Promise<EmailResponse> {
-        const parsedMessage: ParsedMail = await simpleParser(message);
-        const messageFrom = !!parsedMessage.from ? parsedMessage.from.text : '';
-        const messageDate = parsedMessage.date ? `${parsedMessage.date.getTime()}` : '';
-        const messageSubject = parsedMessage.subject || '';
-        const messageBody = parsedMessage.html || '';
+    private static convertMimeToEmailResponse(message: string, mailId: string): EmailResponse {
+        const parsedMessage = parseMimeMessage(message);
+        const messageDate = parsedMessage.date ? Date.parse(parsedMessage.date) : NaN;
         // v1.0 read model was tied to GuerrillaMail's response type, for
         // compatibility-sake we will convert DeveloperMail to the same type.
         return {
             mail_id: mailId,
-            mail_from: messageFrom,
-            mail_timestamp: messageDate,
-            mail_subject: messageSubject,
+            mail_from: parsedMessage.from,
+            mail_timestamp: Number.isNaN(messageDate) ? '' : `${messageDate}`,
+            mail_subject: parsedMessage.subject,
             mail_excerpt: '',
-            mail_body: messageBody
+            mail_body: parsedMessage.body
         };
     }
 
@@ -143,7 +140,7 @@ class DeveloperMailService extends MailboxService {
         // Response value comes as Mime 1.0, we must parse this to conform with our
         // read model.
         for (const message of result) {
-            const email = await DeveloperMailService.convertMimeToEmailResponse(message.value, message.key);
+            const email = DeveloperMailService.convertMimeToEmailResponse(message.value, message.key);
             emailList.push(email);
         }
 

@@ -1,4 +1,4 @@
-import { EmailResponse, MailboxProvider } from '../types';
+import { EmailResponse, MailboxProvider } from '../types.js';
 
 abstract class MailboxService {
     abstract API_URL: string;

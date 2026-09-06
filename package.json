@@ -1,6 +1,6 @@
 {
   "name": "e2e-mailbox",
-  "version": "1.2.0",
+  "version": "2.0.0",
   "description": "E2E test your email notification system using temporary mailbox APIs.",
   "main": "dist/lib/index.js",
   "module": "dist/esm/index.mjs",

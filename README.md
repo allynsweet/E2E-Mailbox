@@ -15,7 +15,7 @@ application action.
 
 ## Provider status
 
-- **GuerrillaMail** is the default provider as of 1.2.
+- **GuerrillaMail** is the default provider as of 2.0.
 - **DeveloperMail** is deprecated and retained only for compatibility. Its
   public service has become unreliable, so explicit `'DEVELOPER'` sessions may
   fall back to GuerrillaMail when mailbox creation fails.

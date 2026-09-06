@@ -1,7 +1,7 @@
 import axios, { AxiosResponse, Method } from 'axios';
 import { EmailResponse, MailboxProvider } from '../types.js';
 import MailboxService from './mailboxService.js';
-import { parseMimeMessage } from './mimeParser.js';
+import { convertDeveloperMailMessage } from './developerMailMime.js';
 
 interface CreateEmailResponse {
     result: {
@@ -83,18 +83,9 @@ class DeveloperMailService extends MailboxService {
      * @returns generated EmailResponse
      */
     private static convertMimeToEmailResponse(message: string, mailId: string): EmailResponse {
-        const parsedMessage = parseMimeMessage(message);
-        const messageDate = parsedMessage.date ? Date.parse(parsedMessage.date) : NaN;
         // v1.0 read model was tied to GuerrillaMail's response type, for
         // compatibility-sake we will convert DeveloperMail to the same type.
-        return {
-            mail_id: mailId,
-            mail_from: parsedMessage.from,
-            mail_timestamp: Number.isNaN(messageDate) ? '' : `${messageDate}`,
-            mail_subject: parsedMessage.subject,
-            mail_excerpt: '',
-            mail_body: parsedMessage.body
-        };
+        return convertDeveloperMailMessage(message, mailId);
     }
 
     /**

@@ -1,8 +1,8 @@
-# Use a lightweight MIME parser instead of mailparser
+# Reuse typescript-email-parser for DeveloperMail MIME
 
-The published library only needs a small, synchronous subset of MIME handling
-for the deprecated DeveloperMail read model. Keeping `mailparser` pulled its
-stream-based Node dependency graph into consumer builds and caused Webpack
-`node:` URI resolution failures, so the library now uses a local parser for
-plain, encoded, and multipart messages. If full MIME support is needed later,
-that should be introduced behind an explicit provider boundary.
+DeveloperMail's raw responses only need to be converted to the legacy mailbox
+read model, but `mailparser` pulled Node stream dependencies into consumer
+bundles and caused Webpack `node:` URI failures. The library now uses
+`typescript-email-parser`: it is dependency-free, typed, CJS-compatible, and
+bundles cleanly with Webpack 4. Writing and maintaining a private parser was
+not worth duplicating RFC2045/RFC5322 behavior.

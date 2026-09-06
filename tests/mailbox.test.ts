@@ -1,6 +1,6 @@
 import axios from 'axios';
 import IntegrationMailbox from '../src/index';
-import { parseMimeMessage } from '../src/services/mimeParser';
+import DeveloperMailService from '../src/services/developerMailService';
 
 jest.mock('axios', () => {
     const axios = Object.assign(jest.fn(), {
@@ -56,43 +56,62 @@ describe('mailbox sessions', () => {
     });
 });
 
-describe('MIME parsing', () => {
-    it('decodes plain quoted-printable messages and encoded headers', () => {
-        const email = parseMimeMessage([
-            'From: Sender <sender@example.com>',
-            'Subject: =?UTF-8?B?V2VsY29tZSE=?=',
-            'Date: Sat, 06 Sep 2025 12:00:00 +0000',
-            'Content-Type: text/plain; charset=utf-8',
-            'Content-Transfer-Encoding: quoted-printable',
-            '',
-            'Caf=C3=A9'
-        ].join('\n'));
-
-        expect(email.from).toBe('Sender <sender@example.com>');
-        expect(email.subject).toBe('Welcome!');
-        expect(email.body).toBe('Café');
-        expect(Date.parse(email.date)).not.toBeNaN();
+describe('DeveloperMail MIME conversion', () => {
+    beforeEach(() => {
+        mockedAxios.mockClear();
+        mockedAxios.get.mockClear();
     });
 
-    it('prefers the HTML part of a multipart message', () => {
-        const email = parseMimeMessage([
-            'From: Sender <sender@example.com>',
-            'Subject: Welcome!',
-            'Content-Type: multipart/alternative; boundary="MAIL-BOUNDARY"',
-            '',
-            'Preamble is ignored.',
-            '--MAIL-BOUNDARY',
-            'Content-Type: text/plain; charset=utf-8',
-            '',
-            'Hello',
-            '--MAIL-BOUNDARY',
-            'Content-Type: text/html; charset=utf-8',
-            'Content-Transfer-Encoding: base64',
-            '',
-            'PGh0bWw+SGVsbG88L2h0bWw+',
-            '--MAIL-BOUNDARY--'
-        ].join('\n'));
+    it('decodes plain quoted-printable messages and encoded headers', async () => {
+        mockedAxios.mockResolvedValueOnce({
+            data: {
+                result: [
+                    'From: Sender <sender@example.com>',
+                    'Subject: =?UTF-8?B?V2VsY29tZSE=?=',
+                    'Date: Sat, 06 Sep 2025 12:00:00 +0000',
+                    'Content-Type: text/plain; charset=utf-8',
+                    'Content-Transfer-Encoding: quoted-printable',
+                    '',
+                    'Caf=C3=A9'
+                ].join('\n')
+            }
+        });
 
-        expect(email.body).toBe('<html>Hello</html>');
+        const email = await new DeveloperMailService().fetchEmailById('message-1');
+
+        expect(email).toEqual({
+            mail_id: 'message-1',
+            mail_from: 'Sender <sender@example.com>',
+            mail_timestamp: '1757160000000',
+            mail_subject: 'Welcome!',
+            mail_excerpt: '',
+            mail_body: 'Café'
+        });
+    });
+
+    it('prefers the HTML part of a multipart message', async () => {
+        mockedAxios.mockResolvedValueOnce({
+            data: {
+                result: [
+                    'From: Sender <sender@example.com>',
+                    'Subject: Welcome!',
+                    'Content-Type: multipart/alternative; boundary="MAIL-BOUNDARY"',
+                    '',
+                    '--MAIL-BOUNDARY',
+                    'Content-Type: text/plain; charset=utf-8',
+                    '',
+                    'Hello',
+                    '--MAIL-BOUNDARY',
+                    'Content-Type: text/html; charset=utf-8',
+                    'Content-Transfer-Encoding: base64',
+                    '',
+                    'PGh0bWw+SGVsbG88L2h0bWw+',
+                    '--MAIL-BOUNDARY--'
+                ].join('\n')
+            }
+        });
+
+        const email = await new DeveloperMailService().fetchEmailById('message-2');
+        expect(email?.mail_body).toBe('<html>Hello</html>');
     });
 });

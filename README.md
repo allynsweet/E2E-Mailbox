@@ -19,9 +19,8 @@ application action.
 - **DeveloperMail** is deprecated and retained only for compatibility. Its
   public service has become unreliable, so explicit `'DEVELOPER'` sessions may
   fall back to GuerrillaMail when mailbox creation fails.
-- GuerrillaMail does not implement `sendSelfMail`. If you rely on sending a
-  message directly through the mailbox API, use an application SMTP inbox in
-  your test instead.
+- GuerrillaMail does not implement `sendSelfMail`. Instead, configure the system
+  under test (or test setup) to send through SMTP to the generated address.
 
 ## Installation
 
@@ -111,6 +110,35 @@ short-lived mailboxes. They are not designed for confidential data, long-term
 storage, guaranteed delivery, or production load testing. Create a fresh
 mailbox per test and forget it when the test finishes.
 
+## Sending test mail through SMTP
+
+GuerrillaMail has no direct send API. Let your application send normally, or
+create the message in test setup with an SMTP client such as Nodemailer:
+
+```js
+import nodemailer from 'nodemailer';
+
+const transporter = nodemailer.createTransport({
+  host: process.env.E2E_SMTP_HOST,
+  port: Number(process.env.E2E_SMTP_PORT || 587),
+  secure: process.env.E2E_SMTP_SECURE === 'true',
+  auth: process.env.E2E_SMTP_USER
+    ? { user: process.env.E2E_SMTP_USER, pass: process.env.E2E_SMTP_PASSWORD }
+    : undefined,
+});
+
+await transporter.sendMail({
+  from: 'test-no-reply@example.com',
+  to: emailAddress,
+  subject: 'Confirm your email',
+  html: '<a href="https://example.com/confirm">Confirm your account</a>',
+});
+
+const email = await mailbox.waitForEmail('Confirm your email', 60);
+```
+
+Keep SMTP credentials in CI secrets and use a dedicated test account or relay.
+
 ## Development
 
 ```console
@@ -119,9 +147,19 @@ $ yarn build
 $ yarn test
 ```
 
-The unit suite covers provider selection, fallback, MIME parsing, and both
-package entry points. The small live-provider smoke test can be affected by
-temporary upstream availability.
+The offline unit suite covers provider selection, fallback, MIME parsing, and
+both package entry points.
+
+With Bun, run the package scripts through Bun's script runner:
+
+```console
+$ bun run build
+$ bun run lint
+$ bun run test
+```
+
+Prefer `bun run test` over `bun test`: the latter invokes Bun's built-in test
+runner directly and does not use this repository's Jest configuration.
 
 ## License
 
